@@ -88,26 +88,20 @@ const CATEGORIES = [
     topics: ["Small Talk","Storytelling","Expressing Opinions","Making Requests","Apologizing Politely"] },
 ];
 
-// ── API — calls our own backend, key never exposed ────────────────────────────
-async function geminiCall(systemPrompt, messages) {
-  const res = await fetch("/api/gemini", {
+// ── THIS IS THE KEY FUNCTION — calls /api/chat on our own server ──────────────
+async function callAI(system, messages) {
+  const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: Array.isArray(messages)
-        ? messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }))
-        : [{ role: "user", parts: [{ text: messages }] }],
-      generationConfig: { maxOutputTokens: 1000, temperature: 0.7 },
-    }),
+    body: JSON.stringify({ system, messages }),
   });
   const data = await res.json();
-  if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message);
-  return data.candidates[0].content.parts[0].text;
+  if (data.error) throw new Error(data.error);
+  return data.text;
 }
 
 async function generateLesson(topic, categoryId, langName) {
-  const text = await geminiCall(
+  const text = await callAI(
     `You are an expert English teacher. The student's native language is ${langName}.
 Respond ONLY with a valid JSON object — no markdown, no backticks, no extra text:
 {
@@ -116,22 +110,20 @@ Respond ONLY with a valid JSON object — no markdown, no backticks, no extra te
   "phrases": [
     { "english": "English phrase", "translation": "translation in ${langName}", "note": "short tip IN ${langName}" }
   ],
-  "tip": "one grammar/usage tip IN ${langName}",
+  "tip": "one grammar tip IN ${langName}",
   "exercise": "one practice exercise IN ${langName}"
 }
 Include exactly 5-6 phrases. Real-world focus.`,
-    `Create a ${categoryId} English lesson about: ${topic}`
+    [{ role: "user", content: `Create a ${categoryId} English lesson about: ${topic}` }]
   );
   return JSON.parse(text.replace(/```json|```/g, "").trim());
 }
 
 async function tutorChat(messages, langName, topic) {
-  return geminiCall(
+  return callAI(
     `You are a warm, patient English tutor for a ${langName} speaker studying: "${topic}".
-- Always respond in ${langName} so the student understands
-- Include English examples with ${langName} translations
-- Be encouraging and clear. Max 3-5 sentences.`,
-    messages
+Always respond in ${langName}. Include English examples with translations. Be encouraging. Max 3-5 sentences.`,
+    messages.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }))
   );
 }
 
@@ -141,7 +133,6 @@ function getBestVoice() {
   const checks = [
     (v) => /samantha/i.test(v.name) && v.localService,
     (v) => /(enhanced|premium|neural)/i.test(v.name) && /en[-_]US/i.test(v.lang),
-    (v) => /(enhanced|premium|neural)/i.test(v.name) && /en/i.test(v.lang),
     (v) => v.localService && /en[-_]US/i.test(v.lang),
     (v) => /en[-_]US/i.test(v.lang),
   ];
@@ -163,7 +154,6 @@ function speakEnglish(text, onEnd) {
     ? (window.speechSynthesis.onvoiceschanged = go) : go();
 }
 
-// ── CSS ───────────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -279,7 +269,6 @@ export default function LinguaAI() {
 
   const tr = getT(lang);
   const catIdx = (c) => CATEGORIES.findIndex((x) => x.id === c?.id);
-
   const pickLang = (l) => { setLang(l); setView("home"); };
   const pickCat  = (c) => { setCat(c);  setView("topics"); };
 
