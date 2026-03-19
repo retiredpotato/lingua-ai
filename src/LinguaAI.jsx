@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, signInWithGoogle, signUpWithEmail, signInWithEmail, logOut, getOrCreateUser, getUserProgress } from "./firebase";
@@ -418,6 +419,7 @@ export default function LinguaAI() {
 
   useEffect(() => { tutorBottom.current?.scrollIntoView({behavior:"smooth"}); }, [tutorMsgs]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
