@@ -377,6 +377,15 @@ const CSS = `
 .fade{animation:fi 0.3s ease;}
 @keyframes fi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 .ex-pad{padding-bottom:100px;}
+.heart-break{position:fixed;inset:0;z-index:999;pointer-events:none;animation:hb-flash 1.5s ease forwards;}
+@keyframes hb-flash{0%{background:rgba(255,75,75,0);}15%{background:rgba(255,75,75,0.35);}40%{background:rgba(255,75,75,0.15);}100%{background:rgba(255,75,75,0);}}
+.heart-break-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:5rem;animation:hb-pop 1.5s ease forwards;z-index:1000;pointer-events:none;}
+@keyframes hb-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5);}20%{opacity:1;transform:translate(-50%,-50%) scale(1.4);}50%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8);}}
+.shake{animation:shake 0.5s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-12px);}40%{transform:translateX(12px);}60%{transform:translateX(-8px);}80%{transform:translateX(8px);}}
+.lives-timer{font-size:0.7rem;color:var(--wrong);font-weight:700;display:flex;align-items:center;gap:4px;}
+.xp-pop{position:fixed;pointer-events:none;font-size:1.2rem;font-weight:900;color:var(--xp);animation:xp-fly 1.2s ease forwards;z-index:500;}
+@keyframes xp-fly{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.3);}}
 `;
 
 // ── App ────────────────────────────────────────────────────────────────────────
@@ -424,6 +433,8 @@ export default function LinguaAI() {
   };
 
   const [hearts, setHeartsState] = useState(() => getLives());
+  const [heartBreak, setHeartBreak] = useState(false);
+  const [livesTimer, setLivesTimer] = useState("");
   const setHearts = (fn) => {
     setHeartsState(prev => {
       const next = typeof fn === "function" ? fn(prev) : fn;
@@ -444,6 +455,29 @@ export default function LinguaAI() {
   const [awBank,     setAwBank]     = useState([]);
 
   // Tutor
+  // Lives restore timer
+  useEffect(() => {
+    const tick = () => {
+      const lives = getLives();
+      if (lives >= MAX_LIVES) { setLivesTimer(""); return; }
+      try {
+        const raw = localStorage.getItem("lingua_lives");
+        if (!raw) return;
+        const {lastLost} = JSON.parse(raw);
+        const restoreTime = RESTORE_MS * Math.max(1, MAX_LIVES - lives);
+        const elapsed = Date.now() - lastLost;
+        const remaining = restoreTime - (elapsed % restoreTime);
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        setLivesTimer(`${mins}:${secs.toString().padStart(2,"0")}`);
+        setHeartsState(lives); // sync display
+      } catch {}
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const [tutorOpen,  setTutorOpen]  = useState(false);
   const [tutorMsgs,  setTutorMsgs]  = useState([]);
   const [tutorInput, setTutorInput] = useState("");
@@ -471,7 +505,8 @@ export default function LinguaAI() {
 
   const tr = getT(lang);
   const completedLessons = prog?.completedLessons || [];
-  const totalXP  = prog?.xp || 0;
+  const [localXP, setLocalXP] = useState(0);
+  const totalXP  = (prog?.xp || 0) + localXP;
   const level    = getLevel(totalXP);
   const lvlProg  = getLevelProgress(totalXP);
   const catIdx   = c => CATS.findIndex(x => x.id === c?.id);
@@ -523,7 +558,7 @@ export default function LinguaAI() {
     setTopic(tp);
     setExercises([]); setExIdx(0); setExLoad(true); setExErr("");
     setHearts(getLives()); setCorrect(0); setFeedback(null); setAnswered(false);
-    setXpEarned(0); setMcSelected(null); setFbValue(""); setAwPlaced([]); setAwBank([]);
+    setXpEarned(0); setLocalXP(0); setMcSelected(null); setFbValue(""); setAwPlaced([]); setAwBank([]);
     setTutorMsgs([{role:"assistant", content: `${tr.tutor}: ${lang.native} 🤖`}]);
     setView("exercise");
     try {
@@ -590,8 +625,13 @@ export default function LinguaAI() {
     if (isCorrect) {
       setCorrect(c => c + 1);
       setXpEarned(x => x + XP_PER_CORRECT);
+      setLocalXP(x => x + XP_PER_CORRECT);
     } else {
-      setHearts(h => Math.max(0, h - 1));
+      setHearts(h => {
+        const next = Math.max(0, h - 1);
+        if (next === 0) { setHeartBreak(true); setTimeout(() => setHeartBreak(false), 1500); }
+        return next;
+      });
     }
   };
 
@@ -716,7 +756,10 @@ export default function LinguaAI() {
               <div className="nav-stats">
                 <div className="ns"><span className="ns-fire">🔥</span>{prog?.streak||1}</div>
                 <div className="ns"><span className="ns-xp">⚡</span>{totalXP}</div>
-                <div className="ns"><span className="ns-heart">❤️</span>{getLives()}/{MAX_LIVES}</div>
+                <div className="ns" style={{flexDirection:"column",alignItems:"flex-end",gap:2}}>
+                <span>❤️ {getLives()}/{MAX_LIVES}</span>
+                {getLives() < MAX_LIVES && livesTimer && <span className="lives-timer">⏱ {livesTimer}</span>}
+              </div>
               </div>
               <div className="nav-r">
                 <div className="chip" onClick={() => setView("welcome")}>{lang.flag}</div>
@@ -794,12 +837,18 @@ export default function LinguaAI() {
             <nav className="ex-nav">
               <button className="ex-close" onClick={() => setView("topics")}>✕</button>
               <div className="prog-track"><div className="prog-fill" style={{width:`${progress}%`}}/></div>
-              <div className="ex-hearts">
+              <div className={`ex-hearts${hearts <= 1 && hearts > 0 ? " shake" : ""}`}>
                 {[...Array(MAX_LIVES)].map((_,i) => (
                   <span key={i} className="ex-heart">{i < hearts ? "❤️" : "🖤"}</span>
                 ))}
               </div>
             </nav>
+            {heartBreak && (
+              <>
+                <div className="heart-break"/>
+                <div className="heart-break-text">💔</div>
+              </>
+            )}
 
             <div className="ex-wrap ex-pad fade">
               {exLoad && (
