@@ -496,13 +496,22 @@ export default function LinguaAI() {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
         setUser(u);
+        // Load per-user XP from localStorage now that we have UID
+        const savedXP = parseInt(localStorage.getItem("lingua_xp_" + u.uid) || "0", 10);
+        setLocalXPState(savedXP);
         const lc = localStorage.getItem("lingua_lang") || "es";
         const l  = LANGUAGES.find(x => x.code === lc) || LANGUAGES[0];
         setLang(l);
-        setView("home"); // redirect immediately - don't wait for Firestore
-        getOrCreateUser(u, l.code).then(p => setProg(p)).catch(e => console.log("Firestore:", e));
+        setView("home");
+        getOrCreateUser(u, l.code).then(p => {
+          setProg(p);
+          // Once Firebase loads, clear localXP since Firebase has the real total
+          setLocalXPState(0);
+          localStorage.removeItem("lingua_xp_" + u.uid);
+        }).catch(e => console.log("Firestore:", e));
       } else {
         setUser(null);
+        setLocalXPState(0);
       }
     });
     return unsub;
@@ -568,7 +577,16 @@ export default function LinguaAI() {
       setView("home"); // redirect immediately - don't wait for Firestore
       getOrCreateUser(cred.user, lang?.code || "es").then(p => setProg(p)).catch(e => console.log("Firestore:", e));
     } catch(e) {
-      setAErr(e.message.replace("Firebase: ","").replace(/\(auth.*\)/,""));
+      const msg = e.message || "";
+      if (msg.includes("invalid-credential") || msg.includes("wrong-password") || msg.includes("user-not-found")) {
+        setAErr("Incorrect email or password. Please try again.");
+      } else if (msg.includes("too-many-requests")) {
+        setAErr("Too many attempts. Please wait a few minutes.");
+      } else if (msg.includes("invalid-email")) {
+        setAErr("Please enter a valid email address.");
+      } else {
+        setAErr(msg.replace("Firebase: ","").replace(/\(auth\/[^)]+\)\.?/g,"").trim() || "Sign in failed. Please try again.");
+      }
     }
     setALoad(false);
   };
