@@ -38,7 +38,7 @@ const TRANSLATIONS = {
     loadingLesson: "Préparation de votre leçon...",
     chatPlaceholder: "Posez une question en français...",
     send: "Envoyer", back: "Retour",
-    tutorWelcome: "Bonjour! Je suis votre tuteur d'anglais. Avez-vous des questions?",
+    tutorWelcome: "Bonjour! Je suis votre tuteur d'anglais. Je suis là pour vous aider. Avez-vous des questions?",
     listen: "Écouter", listening: "Lecture...",
     tipLabel: "💡 Conseil", practiceLabel: "✏️ Pratique",
   },
@@ -51,9 +51,126 @@ const TRANSLATIONS = {
     loadingLesson: "Preparando sua aula...",
     chatPlaceholder: "Faça uma pergunta em português...",
     send: "Enviar", back: "Voltar",
-    tutorWelcome: "Olá! Sou seu tutor de inglês. Tem alguma dúvida?",
+    tutorWelcome: "Olá! Sou seu tutor de inglês. Estou aqui para ajudar. Tem alguma dúvida?",
     listen: "Ouvir", listening: "Reproduzindo...",
     tipLabel: "💡 Dica", practiceLabel: "✏️ Prática",
+  },
+  de: {
+    tagline: "Dein persönlicher KI-Englischlehrer",
+    pickLang: "Wähle deine Sprache um zu beginnen",
+    greeting: "Hallo!",
+    catNames: ["Business-Englisch","Allgemeines Englisch","Grammatik","Wortschatz","Aussprache","Konversation"],
+    topicsLabel: "Verfügbare Themen",
+    loadingLesson: "Lektion wird vorbereitet...",
+    chatPlaceholder: "Stell eine Frage auf Deutsch...",
+    send: "Senden", back: "Zurück",
+    tutorWelcome: "Hallo! Ich bin dein Englischlehrer. Ich helfe dir gerne. Hast du Fragen zur Lektion?",
+    listen: "Anhören", listening: "Wird abgespielt...",
+    tipLabel: "💡 Tipp", practiceLabel: "✏️ Übung",
+  },
+  it: {
+    tagline: "Il tuo tutor personale di inglese con IA",
+    pickLang: "Scegli la tua lingua per iniziare",
+    greeting: "Ciao!",
+    catNames: ["Inglese per il Lavoro","Inglese Generale","Grammatica","Vocabolario","Pronuncia","Conversazione"],
+    topicsLabel: "Argomenti disponibili",
+    loadingLesson: "Preparazione della lezione...",
+    chatPlaceholder: "Fai una domanda in italiano...",
+    send: "Invia", back: "Indietro",
+    tutorWelcome: "Ciao! Sono il tuo tutor di inglese. Sono qui per aiutarti. Hai domande su questa lezione?",
+    listen: "Ascolta", listening: "In riproduzione...",
+    tipLabel: "💡 Suggerimento", practiceLabel: "✏️ Esercizio",
+  },
+  zh: {
+    tagline: "您的个人AI英语教师",
+    pickLang: "选择您的语言开始学习",
+    greeting: "你好！",
+    catNames: ["商务英语","通用英语","语法","词汇","发音","会话"],
+    topicsLabel: "可用主题",
+    loadingLesson: "正在准备您的课程...",
+    chatPlaceholder: "用中文提问...",
+    send: "发送", back: "返回",
+    tutorWelcome: "你好！我是您的英语老师。我在这里帮助您学习。您对本课有什么问题吗？",
+    listen: "听", listening: "播放中...",
+    tipLabel: "💡 提示", practiceLabel: "✏️ 练习",
+  },
+  ar: {
+    tagline: "معلمك الشخصي للغة الإنجليزية بالذكاء الاصطناعي",
+    pickLang: "اختر لغتك للبدء",
+    greeting: "مرحباً!",
+    catNames: ["الإنجليزية التجارية","الإنجليزية العامة","القواعد","المفردات","النطق","المحادثة"],
+    topicsLabel: "المواضيع المتاحة",
+    loadingLesson: "جارٍ تحضير درسك...",
+    chatPlaceholder: "اطرح سؤالاً بالعربية...",
+    send: "إرسال", back: "رجوع",
+    tutorWelcome: "مرحباً! أنا معلمك للغة الإنجليزية. أنا هنا لمساعدتك. هل لديك أي أسئلة حول هذا الدرس؟",
+    listen: "استمع", listening: "جارٍ التشغيل...",
+    tipLabel: "💡 نصيحة", practiceLabel: "✏️ تمرين",
+  },
+  ja: {
+    tagline: "AIによるあなた専用の英語チューター",
+    pickLang: "言語を選んで始めましょう",
+    greeting: "こんにちは！",
+    catNames: ["ビジネス英語","一般英語","文法","語彙","発音","会話"],
+    topicsLabel: "利用可能なトピック",
+    loadingLesson: "レッスンを準備中...",
+    chatPlaceholder: "日本語で質問してください...",
+    send: "送信", back: "戻る",
+    tutorWelcome: "こんにちは！私はあなたの英語チューターです。何でもお手伝いします。このレッスンについて質問はありますか？",
+    listen: "聴く", listening: "再生中...",
+    tipLabel: "💡 ヒント", practiceLabel: "✏️ 練習",
+  },
+  hi: {
+    tagline: "आपका व्यक्तिगत AI अंग्रेज़ी शिक्षक",
+    pickLang: "शुरू करने के लिए अपनी भाषा चुनें",
+    greeting: "नमस्ते!",
+    catNames: ["बिज़नेस अंग्रेज़ी","सामान्य अंग्रेज़ी","व्याकरण","शब्द भंडार","उच्चारण","बातचीत"],
+    topicsLabel: "उपलब्ध विषय",
+    loadingLesson: "आपका पाठ तैयार हो रहा है...",
+    chatPlaceholder: "हिंदी में प्रश्न पूछें...",
+    send: "भेजें", back: "वापस",
+    tutorWelcome: "नमस्ते! मैं आपका अंग्रेज़ी शिक्षक हूँ। मैं आपकी मदद के लिए यहाँ हूँ। क्या इस पाठ के बारे में कोई प्रश्न है?",
+    listen: "सुनें", listening: "चल रहा है...",
+    tipLabel: "💡 सुझाव", practiceLabel: "✏️ अभ्यास",
+  },
+  ru: {
+    tagline: "Ваш личный ИИ-репетитор по английскому",
+    pickLang: "Выберите язык для начала",
+    greeting: "Привет!",
+    catNames: ["Деловой английский","Общий английский","Грамматика","Словарный запас","Произношение","Разговор"],
+    topicsLabel: "Доступные темы",
+    loadingLesson: "Подготовка урока...",
+    chatPlaceholder: "Задайте вопрос на русском...",
+    send: "Отправить", back: "Назад",
+    tutorWelcome: "Привет! Я ваш репетитор по английскому. Я здесь, чтобы помочь. Есть вопросы по уроку?",
+    listen: "Слушать", listening: "Воспроизведение...",
+    tipLabel: "💡 Совет", practiceLabel: "✏️ Упражнение",
+  },
+  ko: {
+    tagline: "당신의 개인 AI 영어 튜터",
+    pickLang: "시작하려면 언어를 선택하세요",
+    greeting: "안녕하세요!",
+    catNames: ["비즈니스 영어","일반 영어","문법","어휘","발음","회화"],
+    topicsLabel: "이용 가능한 주제",
+    loadingLesson: "수업을 준비하는 중...",
+    chatPlaceholder: "한국어로 질문하세요...",
+    send: "보내기", back: "뒤로",
+    tutorWelcome: "안녕하세요! 저는 당신의 영어 튜터입니다. 도움이 필요하시면 말씀해 주세요. 이 수업에 대해 질문이 있으신가요?",
+    listen: "듣기", listening: "재생 중...",
+    tipLabel: "💡 팁", practiceLabel: "✏️ 연습",
+  },
+  tr: {
+    tagline: "Kişisel yapay zeka İngilizce öğretmeniniz",
+    pickLang: "Başlamak için dilinizi seçin",
+    greeting: "Merhaba!",
+    catNames: ["İş İngilizcesi","Genel İngilizce","Gramer","Kelime Bilgisi","Telaffuz","Konuşma"],
+    topicsLabel: "Mevcut konular",
+    loadingLesson: "Dersiniz hazırlanıyor...",
+    chatPlaceholder: "Türkçe soru sorun...",
+    send: "Gönder", back: "Geri",
+    tutorWelcome: "Merhaba! Ben İngilizce öğretmeninizim. Size yardımcı olmak için buradayım. Bu ders hakkında sorularınız var mı?",
+    listen: "Dinle", listening: "Çalınıyor...",
+    tipLabel: "💡 İpucu", practiceLabel: "✏️ Alıştırma",
   },
 };
 
@@ -88,7 +205,6 @@ const CATEGORIES = [
     topics: ["Small Talk","Storytelling","Expressing Opinions","Making Requests","Apologizing Politely"] },
 ];
 
-// ── THIS IS THE KEY FUNCTION — calls /api/chat on our own server ──────────────
 async function callAI(system, messages) {
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -127,16 +243,21 @@ Always respond in ${langName}. Include English examples with translations. Be en
   );
 }
 
-// ── Speech ────────────────────────────────────────────────────────────────────
 function getBestVoice() {
   const voices = window.speechSynthesis.getVoices();
   const checks = [
+    (v) => /natural/i.test(v.name) && /en/i.test(v.lang),
+    (v) => /microsoft.*aria|microsoft.*jenny|microsoft.*guy/i.test(v.name),
+    (v) => /microsoft/i.test(v.name) && /en[-_]US/i.test(v.lang),
     (v) => /samantha/i.test(v.name) && v.localService,
     (v) => /(enhanced|premium|neural)/i.test(v.name) && /en[-_]US/i.test(v.lang),
     (v) => v.localService && /en[-_]US/i.test(v.lang),
     (v) => /en[-_]US/i.test(v.lang),
   ];
-  for (const check of checks) { const v = voices.find(check); if (v) return v; }
+  for (const check of checks) {
+    const v = voices.find(check);
+    if (v) return v;
+  }
   return null;
 }
 
