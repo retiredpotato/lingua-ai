@@ -454,17 +454,14 @@ export default function LinguaAI() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
         setUser(u);
         const lc = localStorage.getItem("lingua_lang") || "es";
         const l  = LANGUAGES.find(x => x.code === lc) || LANGUAGES[0];
         setLang(l);
-        try {
-          const p = await getOrCreateUser(u, l.code);
-          setProg(p);
-        } catch(e) { console.log("Firestore error:", e); }
-        setView("home");
+        setView("home"); // redirect immediately - don't wait for Firestore
+        getOrCreateUser(u, l.code).then(p => setProg(p)).catch(e => console.log("Firestore:", e));
       } else {
         setUser(null);
       }
@@ -490,8 +487,9 @@ export default function LinguaAI() {
     setALoad(true); setAErr("");
     try {
       const cred = await signInWithGoogle();
-      try { const p = await getOrCreateUser(cred.user, lang?.code || "es"); setProg(p); } catch(e) { console.log("Progress error:", e); }
-      setView("home");
+      setUser(cred.user);
+      setView("home"); // redirect immediately
+      getOrCreateUser(cred.user, lang?.code || "es").then(p => setProg(p)).catch(e => console.log("Firestore:", e));
     } catch(e) { setAErr(e.message); }
     setALoad(false);
   };
@@ -506,8 +504,9 @@ export default function LinguaAI() {
       } else {
         cred = await signInWithEmail(aEmail, aPass);
       }
-      try { const p = await getOrCreateUser(cred.user, lang?.code || "es"); setProg(p); } catch(e) { console.log("Progress error:", e); }
-      setView("home");
+      setUser(cred.user);
+      setView("home"); // redirect immediately - don't wait for Firestore
+      getOrCreateUser(cred.user, lang?.code || "es").then(p => setProg(p)).catch(e => console.log("Firestore:", e));
     } catch(e) {
       setAErr(e.message.replace("Firebase: ","").replace(/\(auth.*\)/,""));
     }
@@ -599,14 +598,15 @@ export default function LinguaAI() {
   const nextExercise = async () => {
     const next = exIdx + 1;
     if (next >= exercises.length || hearts === 0) {
-      // Lesson complete
       const earned = xpEarned + XP_PER_LESSON;
       setXpEarned(earned);
+      setView("complete"); // go to complete immediately, don't wait for Firebase
       if (user) {
-        const p = await addXP(user.uid, earned, topic, cat.id);
-        setProg(p);
+        try {
+          const p = await addXP(user.uid, earned, topic, cat.id);
+          setProg(p);
+        } catch(e) { console.log("XP save failed:", e); }
       }
-      setView("complete");
     } else {
       loadExercise(next, exercises);
     }
