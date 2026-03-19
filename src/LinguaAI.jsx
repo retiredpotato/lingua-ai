@@ -64,44 +64,39 @@ async function generateExercises(topic, catId, langName) {
   const res = await fetch("/api/chat", {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
-      system: `You are an English exercise generator. The student's native language is ${langName}.
-Generate EXACTLY 6 exercises about "${topic}" (${catId} category).
-Use a mix of these types: multiple_choice, fill_blank, arrange_words.
-Return ONLY valid JSON — absolutely no markdown, no backticks, no explanation:
+      system: `You are an English teacher. Student speaks ${langName} and is LEARNING ENGLISH.
+Generate EXACTLY 6 exercises teaching English about "${topic}" (${catId}).
+CRITICAL: Instructions/hints are in ${langName} so the student understands the task.
+ALL answer options and answers MUST BE IN ENGLISH - the student is learning English!
+Return ONLY valid JSON, no markdown, no backticks:
 {
   "exercises": [
     {
       "type": "multiple_choice",
-      "instruction": "short instruction IN ${langName}",
-      "english": "the key English phrase being tested",
-      "question": "phrase or sentence IN ${langName} to translate to English",
-      "options": ["correct answer","wrong option 1","wrong option 2","wrong option 3"],
-      "answer": "correct answer"
+      "instruction": "Describe IN ${langName} what English phrase to choose",
+      "english": "the correct English phrase",
+      "options": ["correct English phrase","wrong English phrase 1","wrong English phrase 2","wrong English phrase 3"],
+      "answer": "correct English phrase"
     },
     {
       "type": "fill_blank",
-      "instruction": "short instruction IN ${langName}",
-      "english": "the key English phrase",
-      "sentence": "English sentence with ___ where the answer goes",
-      "answer": "the missing word or phrase",
-      "hint": "hint IN ${langName}"
+      "instruction": "Short task IN ${langName}",
+      "english": "the full correct English sentence",
+      "sentence": "English sentence with ___ for the missing English word",
+      "answer": "missing English word",
+      "hint": "meaning of missing word IN ${langName}"
     },
     {
       "type": "arrange_words",
-      "instruction": "short instruction IN ${langName}",
-      "english": "the target sentence",
-      "words": ["array","of","shuffled","words","4-6","words"],
-      "answer": "the correct English sentence"
+      "instruction": "Short task IN ${langName} explaining what English sentence to build",
+      "english": "the correct English sentence",
+      "words": ["shuffled","English","words","here"],
+      "answer": "correct English sentence"
     }
   ]
 }
-CRITICAL RULES:
-- options MUST have EXACTLY 4 items, answer must be one of them (randomize position)
-- arrange_words words array must be shuffled (not in answer order)
-- arrange_words must have 4-6 words maximum
-- ALL instructions must be in ${langName}
-- Make exercises practical and interesting`,
-      messages: [{role:"user", content:`Create 6 exercises about: ${topic}`}]
+RULES: options=EXACTLY 4 ENGLISH phrases; arrange_words=4-6 ENGLISH words shuffled; fill_blank answer=ENGLISH word; ALL options/answers in ENGLISH; only instructions/hints in ${langName}`,
+      messages: [{role:"user", content:`Create 6 English-teaching exercises about: ${topic}`}]
     })
   });
   const data = await res.json();
