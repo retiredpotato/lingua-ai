@@ -292,6 +292,7 @@ const CSS = `
 .mc-opt:hover:not(:disabled){background:var(--card2);border-color:rgba(16,232,181,0.4);transform:translateX(4px);}
 .mc-opt.correct{background:rgba(88,204,2,0.12);border-color:var(--correct);color:var(--correct);}
 .mc-opt.wrong{background:rgba(255,75,75,0.1);border-color:var(--wrong);color:var(--wrong);}
+.mc-opt.selected{background:rgba(16,232,181,0.08);border-color:rgba(16,232,181,0.5);color:var(--c);}
 .mc-opt:disabled{cursor:default;}
 .mc-letter{width:32px;height:32px;border-radius:8px;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:900;flex-shrink:0;}
 
@@ -398,7 +399,38 @@ export default function LinguaAI() {
   const [exIdx,     setExIdx]     = useState(0);
   const [exLoad,    setExLoad]    = useState(false);
   const [exErr,     setExErr]     = useState("");
-  const [hearts,    setHearts]    = useState(3);
+  const MAX_LIVES = 5;
+  const RESTORE_MS = 5 * 60 * 1000; // 5 minutes per life
+
+  const getLives = () => {
+    try {
+      const raw = localStorage.getItem("lingua_lives");
+      if (!raw) return MAX_LIVES;
+      const {lives, lastLost, lostTimes} = JSON.parse(raw);
+      if (lives >= MAX_LIVES) return MAX_LIVES;
+      const now = Date.now();
+      const elapsed = now - lastLost;
+      const restoreTime = RESTORE_MS * Math.max(1, MAX_LIVES - lives);
+      const restored = Math.floor(elapsed / restoreTime);
+      return Math.min(MAX_LIVES, lives + restored);
+    } catch { return MAX_LIVES; }
+  };
+
+  const saveLives = (n) => {
+    try {
+      const current = getLives();
+      localStorage.setItem("lingua_lives", JSON.stringify({lives:n, lastLost: n < current ? Date.now() : JSON.parse(localStorage.getItem("lingua_lives")||"{}").lastLost || Date.now()}));
+    } catch {}
+  };
+
+  const [hearts, setHeartsState] = useState(() => getLives());
+  const setHearts = (fn) => {
+    setHeartsState(prev => {
+      const next = typeof fn === "function" ? fn(prev) : fn;
+      saveLives(next);
+      return next;
+    });
+  };
   const [correct,   setCorrect]   = useState(0);
   const [feedback,  setFeedback]  = useState(null); // null | "correct" | "wrong"
   const [answered,  setAnswered]  = useState(false);
@@ -423,14 +455,18 @@ export default function LinguaAI() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
       if (u) {
+        setUser(u);
         const lc = localStorage.getItem("lingua_lang") || "es";
         const l  = LANGUAGES.find(x => x.code === lc) || LANGUAGES[0];
         setLang(l);
-        const p = await getOrCreateUser(u, l.code);
-        setProg(p);
+        try {
+          const p = await getOrCreateUser(u, l.code);
+          setProg(p);
+        } catch(e) { console.log("Firestore error:", e); }
         setView("home");
+      } else {
+        setUser(null);
       }
     });
     return unsub;
@@ -487,7 +523,7 @@ export default function LinguaAI() {
   const startLesson = async (tp) => {
     setTopic(tp);
     setExercises([]); setExIdx(0); setExLoad(true); setExErr("");
-    setHearts(3); setCorrect(0); setFeedback(null); setAnswered(false);
+    setHearts(getLives()); setCorrect(0); setFeedback(null); setAnswered(false);
     setXpEarned(0); setMcSelected(null); setFbValue(""); setAwPlaced([]); setAwBank([]);
     setTutorMsgs([{role:"assistant", content: `${tr.tutor}: ${lang.native} 🤖`}]);
     setView("exercise");
@@ -680,7 +716,7 @@ export default function LinguaAI() {
               <div className="nav-stats">
                 <div className="ns"><span className="ns-fire">🔥</span>{prog?.streak||1}</div>
                 <div className="ns"><span className="ns-xp">⚡</span>{totalXP}</div>
-                <div className="ns"><span className="ns-heart">❤️</span>{level}</div>
+                <div className="ns"><span className="ns-heart">❤️</span>{getLives()}/{MAX_LIVES}</div>
               </div>
               <div className="nav-r">
                 <div className="chip" onClick={() => setView("welcome")}>{lang.flag}</div>
@@ -759,7 +795,7 @@ export default function LinguaAI() {
               <button className="ex-close" onClick={() => setView("topics")}>✕</button>
               <div className="prog-track"><div className="prog-fill" style={{width:`${progress}%`}}/></div>
               <div className="ex-hearts">
-                {[...Array(3)].map((_,i) => (
+                {[...Array(MAX_LIVES)].map((_,i) => (
                   <span key={i} className="ex-heart">{i < hearts ? "❤️" : "🖤"}</span>
                 ))}
               </div>
@@ -815,10 +851,12 @@ export default function LinguaAI() {
                         if (answered) {
                           if (opt === ex.answer) cls = "correct";
                           else if (opt === mcSelected) cls = "wrong";
+                        } else if (opt === mcSelected) {
+                          cls = "selected";
                         }
                         return (
                           <button key={i} className={`mc-opt ${cls}`} disabled={answered}
-                            onClick={() => { setMcSelected(opt); }}>
+                            onClick={() => { if (!answered) setMcSelected(opt); }}>
                             <span className="mc-letter">{letters[i]}</span>
                             {opt}
                           </button>
