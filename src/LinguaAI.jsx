@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps, no-unused-vars */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, signInWithGoogle, signUpWithEmail, signInWithEmail, logOut, getOrCreateUser, getUserProgress } from "./firebase";
