@@ -413,9 +413,10 @@ export default function LinguaAI() {
 
   const getLives = () => {
     try {
-      const raw = localStorage.getItem("lingua_lives");
+      const uid = auth.currentUser?.uid || "guest";
+      const raw = localStorage.getItem("lingua_lives_" + uid);
       if (!raw) return MAX_LIVES;
-      const {lives, lastLost, lostTimes} = JSON.parse(raw);
+      const {lives, lastLost} = JSON.parse(raw);
       if (lives >= MAX_LIVES) return MAX_LIVES;
       const now = Date.now();
       const elapsed = now - lastLost;
@@ -427,8 +428,11 @@ export default function LinguaAI() {
 
   const saveLives = (n) => {
     try {
+      const uid = auth.currentUser?.uid || "guest";
+      const key = "lingua_lives_" + uid;
       const current = getLives();
-      localStorage.setItem("lingua_lives", JSON.stringify({lives:n, lastLost: n < current ? Date.now() : JSON.parse(localStorage.getItem("lingua_lives")||"{}").lastLost || Date.now()}));
+      const prev = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(key, JSON.stringify({lives:n, lastLost: n < current ? Date.now() : (prev.lastLost || Date.now())}));
     } catch {}
   };
 
@@ -461,7 +465,8 @@ export default function LinguaAI() {
       const lives = getLives();
       if (lives >= MAX_LIVES) { setLivesTimer(""); return; }
       try {
-        const raw = localStorage.getItem("lingua_lives");
+        const uid = auth.currentUser?.uid || "guest";
+        const raw = localStorage.getItem("lingua_lives_" + uid);
         if (!raw) return;
         const {lastLost} = JSON.parse(raw);
         const restoreTime = RESTORE_MS * Math.max(1, MAX_LIVES - lives);
@@ -505,7 +510,27 @@ export default function LinguaAI() {
 
   const tr = getT(lang);
   const completedLessons = prog?.completedLessons || [];
-  const [localXP, setLocalXP] = useState(0);
+  const getLocalXP = () => {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return 0;
+      return parseInt(localStorage.getItem("lingua_xp_" + uid) || "0", 10);
+    } catch { return 0; }
+  };
+  const saveLocalXP = (n) => {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (uid) localStorage.setItem("lingua_xp_" + uid, String(n));
+    } catch {}
+  };
+  const [localXP, setLocalXPState] = useState(() => getLocalXP());
+  const setLocalXP = (fn) => {
+    setLocalXPState(prev => {
+      const next = typeof fn === "function" ? fn(prev) : fn;
+      saveLocalXP(next);
+      return next;
+    });
+  };
   const totalXP  = (prog?.xp || 0) + localXP;
   const level    = getLevel(totalXP);
   const lvlProg  = getLevelProgress(totalXP);
@@ -558,7 +583,7 @@ export default function LinguaAI() {
     setTopic(tp);
     setExercises([]); setExIdx(0); setExLoad(true); setExErr("");
     setHearts(getLives()); setCorrect(0); setFeedback(null); setAnswered(false);
-    setXpEarned(0); setLocalXP(0); setMcSelected(null); setFbValue(""); setAwPlaced([]); setAwBank([]);
+    setXpEarned(0); setLocalXPState(0); setMcSelected(null); setFbValue(""); setAwPlaced([]); setAwBank([]);
     setTutorMsgs([{role:"assistant", content: `${tr.tutor}: ${lang.native} 🤖`}]);
     setView("exercise");
     try {
@@ -645,6 +670,8 @@ export default function LinguaAI() {
         try {
           const p = await addXP(user.uid, earned, topic, cat.id);
           setProg(p);
+          saveLocalXP(0); // clear local cache once Firebase has it
+          setLocalXPState(0);
         } catch(e) { console.log("XP save failed:", e); }
       }
     } else {
