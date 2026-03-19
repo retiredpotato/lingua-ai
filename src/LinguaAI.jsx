@@ -64,38 +64,44 @@ async function generateExercises(topic, catId, langName) {
   const res = await fetch("/api/chat", {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
-      system: `You are an English teacher. Student speaks ${langName} and is LEARNING ENGLISH.
-Generate EXACTLY 6 exercises teaching English about "${topic}" (${catId}).
-CRITICAL: Instructions/hints are in ${langName} so the student understands the task.
-ALL answer options and answers MUST BE IN ENGLISH - the student is learning English!
+      system: `You are an English teacher. Student speaks ${langName} natively and is learning English.
+Create 6 exercises to teach English about "${topic}" (${catId}).
+
+TEACHING APPROACH:
+- Describe a REAL SITUATION in ${langName} so the student understands the context
+- The student must then produce or recognize the correct ENGLISH response
+- This teaches them to USE English in real life, not just translate words
+
 Return ONLY valid JSON, no markdown, no backticks:
 {
   "exercises": [
     {
       "type": "multiple_choice",
-      "instruction": "Describe IN ${langName} what English phrase to choose",
-      "english": "the correct English phrase",
-      "options": ["correct English phrase","wrong English phrase 1","wrong English phrase 2","wrong English phrase 3"],
-      "answer": "correct English phrase"
+      "instruction": "Describe a real situation IN ${langName} — e.g. 'Estás en una reunión y quieres pedir la palabra.' The student picks the right English phrase to use.",
+      "options": ["correct English phrase to use","wrong English option 1","wrong English option 2","wrong English option 3"],
+      "answer": "correct English phrase to use"
     },
     {
       "type": "fill_blank",
-      "instruction": "Short task IN ${langName}",
-      "english": "the full correct English sentence",
-      "sentence": "English sentence with ___ for the missing English word",
-      "answer": "missing English word",
-      "hint": "meaning of missing word IN ${langName}"
+      "instruction": "Short context IN ${langName} explaining the situation",
+      "sentence": "English sentence with ___ where an English word is missing",
+      "answer": "the missing English word",
+      "hint": "what the missing word means IN ${langName}"
     },
     {
       "type": "arrange_words",
-      "instruction": "Short task IN ${langName} explaining what English sentence to build",
-      "english": "the correct English sentence",
-      "words": ["shuffled","English","words","here"],
+      "instruction": "IN ${langName}: tell the student what English sentence to build and why it is useful",
+      "words": ["shuffled","English","words"],
       "answer": "correct English sentence"
     }
   ]
 }
-RULES: options=EXACTLY 4 ENGLISH phrases; arrange_words=4-6 ENGLISH words shuffled; fill_blank answer=ENGLISH word; ALL options/answers in ENGLISH; only instructions/hints in ${langName}`,
+STRICT RULES:
+- multiple_choice: NO english field. EXACTLY 4 ENGLISH options. Answer is one of them.
+- fill_blank: NO english field. Sentence and answer are in ENGLISH only.
+- arrange_words: NO english field. Words and answer are ENGLISH only. 4-6 words max, shuffled.
+- Instructions and hints are ALWAYS in ${langName}.
+- NEVER show the answer in the instruction.`,
       messages: [{role:"user", content:`Create 6 English-teaching exercises about: ${topic}`}]
     })
   });
@@ -785,14 +791,19 @@ export default function LinguaAI() {
                   {/* Instruction */}
                   <div className="ex-instruction">{ex.instruction}</div>
 
-                  {/* English phrase card with speak */}
-                  {ex.english && (
+                  {/* English phrase card — only show for fill_blank and arrange_words, not multiple choice */}
+                  {ex.english && ex.type !== "multiple_choice" && (
                     <div className="ex-english">
                       <div className="ex-eng-text">{ex.english}</div>
                       <button className={`ex-speak${speaking?" on":""}`} onClick={handleSpeak}>
                         {speaking ? "🔊..." : "🔊 Listen"}
                       </button>
                     </div>
+                  )}
+                  {ex.type === "multiple_choice" && (
+                    <button className={`ex-speak${speaking?" on":""}`} style={{marginBottom:"16px"}} onClick={handleSpeak}>
+                      {speaking ? "🔊 Playing..." : "🔊 Listen to context"}
+                    </button>
                   )}
 
                   {/* Multiple Choice */}
