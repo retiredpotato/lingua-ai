@@ -311,6 +311,7 @@ export default function LinguaAI() {
   const finishLesson=async()=>{
     if(user&&topic&&cat){await saveLesson(user.uid,topic,cat.id);const p=await getUserProgress(user.uid);setProgress(p);}
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(()=>{if(lesson&&user)finishLesson();},[lesson]);
 
   const sendChat=async()=>{
