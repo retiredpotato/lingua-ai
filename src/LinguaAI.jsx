@@ -172,8 +172,11 @@ function speakText(text, cb) {
     u.onend=cb;u.onerror=cb;
     window.speechSynthesis.speak(u);
   };
-  vs=>window.speechSynthesis.getVoices().length===0?(window.speechSynthesis.onvoiceschanged=go):go();
-  go();
+  if (window.speechSynthesis.getVoices().length===0) {
+    window.speechSynthesis.onvoiceschanged = go;
+  } else {
+    go();
+  }
 }
 
 // ── Firebase ───────────────────────────────────────────────────────────────────
