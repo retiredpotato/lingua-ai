@@ -113,24 +113,47 @@ async function genExercises(topic, catId, langName) {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
       system:`You are an expert English teacher. Student's native language: ${langName}. Teaching them ENGLISH.
-Create 7 varied exercises about "${topic}" (${catId}).
-Mix these types: multiple_choice, fill_blank, arrange_words, speak.
+Create exactly 7 exercises about "${topic}" (${catId} English lesson).
+Use this exact mix: 2 multiple_choice, 2 fill_blank, 1 arrange_words, 2 speak.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON, no markdown:
 {
   "exercises": [
-    {"type":"multiple_choice","instruction":"situational context IN ${langName} — what English phrase fits this situation?","options":["correct English","wrong English 1","wrong English 2","wrong English 3"],"answer":"correct English"},
-    {"type":"fill_blank","instruction":"context IN ${langName}","sentence":"English sentence with ___ blank","answer":"missing English word","hint":"meaning IN ${langName}"},
-    {"type":"arrange_words","instruction":"context IN ${langName} — build this English sentence","words":["shuffled","english","words"],"answer":"correct English sentence"},
-    {"type":"speak","instruction":"context IN ${langName} — say this in English","phrase":"English phrase to pronounce","phonetic":"phonetic pronunciation guide","tip":"pronunciation tip IN ${langName}"}
+    {
+      "type": "multiple_choice",
+      "instruction": "Real situation IN ${langName} - which English phrase is correct here?",
+      "options": ["Real English phrase 1", "Real English phrase 2", "Real English phrase 3", "Real English phrase 4"],
+      "answer": "Real English phrase 1"
+    },
+    {
+      "type": "fill_blank",
+      "instruction": "Context IN ${langName}",
+      "sentence": "Complete English sentence with ___ missing word",
+      "answer": "missingword",
+      "hint": "Meaning of missing word IN ${langName}"
+    },
+    {
+      "type": "arrange_words",
+      "instruction": "IN ${langName}: what sentence to build and why it is useful",
+      "words": ["shuffled", "english", "words", "here"],
+      "answer": "correct english sentence here"
+    },
+    {
+      "type": "speak",
+      "instruction": "IN ${langName}: explain the situation where you would say this",
+      "phrase": "Short clear English phrase to say aloud",
+      "phonetic": "/fəˈnetɪk/ — say it like: [foh-NET-ik]",
+      "tip": "Key pronunciation tip IN ${langName} e.g. stress which syllable"
+    }
   ]
 }
-RULES:
-- multiple_choice: EXACTLY 4 English options, answer is one
-- arrange_words: 4-6 English words max, shuffled
-- speak: simple clear English phrase, phonetic in brackets like [heh-LOH], tip in ${langName}
-- Include at least 1 speak exercise per set
-- ALL instructions in ${langName}, ALL answers in English`,
+STRICT RULES:
+- multiple_choice: options must be REAL ENGLISH SENTENCES/PHRASES, NOT phonetics or gibberish. EXACTLY 4 options.
+- fill_blank: answer is ONE English word that fills the blank. Sentence and answer in English.
+- arrange_words: 4-6 real English words shuffled. Answer is the correct full sentence.
+- speak: phrase must be SHORT (3-7 words max), natural English. phonetic shows how to pronounce each part. tip in ${langName}.
+- ALL instructions and hints in ${langName}. ALL answers/options in English.
+- NEVER put phonetics or pronunciation guides as multiple choice options.`,
       messages:[{role:"user",content:`7 exercises about: ${topic}`}]
     })
   });
@@ -1017,25 +1040,30 @@ export default function LinguaAI() {
                   {/* SPEAK exercise */}
                   {ex.type==="speak" && (
                     <>
+                      {/* Step 1: Phrase card */}
                       <div className="speak-card">
+                        <div style={{fontSize:"0.72rem",fontWeight:900,textTransform:"uppercase",letterSpacing:"0.12em",color:"#38bdf8",marginBottom:"10px",opacity:0.8}}>🎯 SAY THIS IN ENGLISH</div>
                         <div className="speak-phrase">"{ex.phrase}"</div>
                         {ex.phonetic && <div className="speak-phonetic">{ex.phonetic}</div>}
                         {ex.tip && <div className="speak-tip">💡 {ex.tip}</div>}
                         <button className={`speak-listen${speaking?" playing":""}`}
                           onClick={()=>{setSpeaking(true);speakText(ex.phrase,()=>setSpeaking(false));}}>
-                          {speaking?"🔊 Playing...":"🔊 Listen first"}
+                          {speaking?"🔊 Playing...":"🔊 Hear pronunciation"}
                         </button>
                       </div>
 
                       {pronScore === null ? (
                         <div className="mic-area">
+                          <div style={{fontSize:"0.82rem",fontWeight:700,color:"var(--muted)",marginBottom:"8px",textAlign:"center"}}>
+                            {recState==="idle" ? "👆 Tap the mic and say the phrase above" : "🎧 Speak clearly now..."}
+                          </div>
                           {recState==="recording"
                             ? (<>
                                 <div className="sound-wave">
                                   {[...Array(7)].map((_,i)=><div key={i} className="wave-bar"/>)}
                                 </div>
                                 <button className="mic-btn recording" onClick={stopRecording}>⏹</button>
-                                <div className="mic-label">{tr.listening}</div>
+                                <div className="mic-label" style={{color:"var(--err)",fontWeight:800}}>{tr.listening}</div>
                               </>)
                             : (<>
                                 <button className="mic-btn idle" onClick={startRecording}>🎤</button>
@@ -1047,21 +1075,25 @@ export default function LinguaAI() {
                         <div style={{textAlign:"center",padding:"12px 0"}}>
                           {(() => {
                             const {label,color,emoji} = getScoreLabel(pronScore, tr);
+                            const passed = pronScore >= 50;
                             return (
                               <>
-                                <div className="score-ring" style={{borderColor:color,color}}>
+                                <div className="score-ring" style={{borderColor:color,color,boxShadow:`0 0 20px ${color}33`}}>
                                   <div className="score-num">{pronScore}</div>
                                   <div className="score-pct">/ 100</div>
                                 </div>
-                                <div className="score-label" style={{color}}>{emoji} {label}</div>
+                                <div className="score-label" style={{color,fontSize:"1.2rem",marginBottom:"6px"}}>{emoji} {label}</div>
                                 {spokenText && (
-                                  <div className="score-heard">
+                                  <div className="score-heard" style={{marginBottom:"6px"}}>
                                     I heard: <em>"{spokenText}"</em>
                                   </div>
                                 )}
-                                {pronScore < 50 && (
+                                <div style={{fontSize:"0.8rem",color:"var(--muted)",fontWeight:700,marginBottom:"14px"}}>
+                                  {passed ? "✅ Great! Tap Continue to move on." : `❌ Expected: "${ex.phrase}"`}
+                                </div>
+                                {!passed && (
                                   <button onClick={retryPronunciation}
-                                    style={{marginTop:"14px",background:"none",border:"1.5px solid var(--border2)",color:"var(--muted)",fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:"0.85rem",padding:"8px 20px",borderRadius:"20px",cursor:"pointer"}}>
+                                    style={{background:"linear-gradient(135deg,#38bdf8,#0284c7)",border:"none",color:"#fff",fontFamily:"'Nunito',sans-serif",fontWeight:900,fontSize:"0.88rem",padding:"10px 24px",borderRadius:"20px",cursor:"pointer"}}>
                                     🔄 {tr.retry}
                                   </button>
                                 )}
